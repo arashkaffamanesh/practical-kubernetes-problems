@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: whoami-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # traefik.ingress.kubernetes.io/rule-type: "PathPrefixStrip"
+spec:
+  rules:
+  - host: csky08
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: whoami-service
+          servicePort: 80
