@@ -196,7 +196,7 @@ Using this ConfigMap, we can inject data in our application:
 
 ```bash
 cat 0-nginx-configmap.yaml
-k create -f 
+k create -f 0-nginx-configmap.yaml
 ```
 </p>
 </details>
