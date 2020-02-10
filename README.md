@@ -19,14 +19,14 @@ https://goo.gl/Hzk2sd
 
 ### Useful aliases
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
 
 ```bash
 alias k="kubectl"
 alias kx="kubectx"
 alias kn="kubens"
-alias dl='docker ps -l -q'
+alias kgel="kubectl get events --sort-by=.metadata.creationTimestamp"
 ```
 
 </p>
@@ -36,9 +36,45 @@ alias dl='docker ps -l -q'
 
 https://kubernetes.io/docs/reference/kubectl/cheatsheet/
 
+https://github.com/dennyzhang/cheatsheet-kubernetes-A4
+
+<details><summary>Expand here to see the solution</summary>
+<p>
+
+k get events --sort-by=.metadata.creationTimestamp # List Events sorted by timestamp
+
+k get services --sort-by=.metadata.name # List Services Sorted by Name
+
+k get pods --sort-by=.metadata.name
+
+k get endpoints
+
+k explain pods,svc
+
+k get pods -A # --all-namespaces 
+
+k get nodes -o jsonpath='{.items[*].spec.podCIDR}'
+
+k get pods -o wide
+
+k get pod my-pod -o yaml --export > my-pod.yaml
+
+k get pods --show-labels # Show labels for all pods (or other objects)
+
+k get pods --sort-by='.status.containerStatuses[0].restartCount'
+
+k cluster-info
+
+k api-resources
+
+k get apiservice
+
+</p>
+</details>
+
 ### kubectl create namespace imperative via declarative
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
 
 ```bash
@@ -51,9 +87,9 @@ k delete ns test
 </p>
 </details>
 
-### kubectl create / run pods or deplyomens with dry-run
+### kubectl create / run pods or deploymens with dry-run
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
 
 ```bash
@@ -110,7 +146,7 @@ k apply -f nginx-deployment.yaml
 
 ### kubectl get events and logs, describe objects
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
 
 ```bash
@@ -140,7 +176,7 @@ These values can be exposed to pods as environment variables or mounted as files
 
 In order to create a secret from a text file, you can run the following, This creates a generic secret named secretname and automatically encodes the value as base64:
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
 
 ```bash
@@ -172,7 +208,7 @@ Create a ConfigMap named kubernauts that contains a key named dev with the value
 
 With the --from-literal argument passed to the kubectl create configmap command you can create a ConfigMap containing a text value.
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
 
 ```bash
@@ -191,7 +227,7 @@ k describe cm kubernauts
 
 Using this ConfigMap, we can inject data in our application:
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
 
 ```bash
@@ -211,7 +247,7 @@ We’ll use a pre-made container — containous/whoami — capable of telling yo
 
 If you'd like to build the container image with docker, do:
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
 
 ```bash
@@ -249,7 +285,7 @@ Then we define the pods with the (template: …) which will have the whoami labe
 
 The Pods will host a container using the image containous/whoami (image:containous/whoami)
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
 
 ```bash
@@ -290,10 +326,8 @@ Create a Pod with two containers, both with image alpine and command "echo hello
 
 The easiest way to do it is create a pod with a single container and save its definition in a YAML file and extend it with an additional container:
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
-
-
 
 ```bash
 k run alpine-2-containers --image=alpine --restart=Never -o yaml --dry-run -- /bin/sh -c 'echo hello;sleep 3600' > alpine-pod.yaml
@@ -341,7 +375,7 @@ k delete pod alpine-2-containers
 
 We'll extend the above alpine-2-containers with a shared volume of type emptyDir named `share` with a volumeMount for each container with a mountPath `/tmp/share1` and `/tmp/share2` as follow:
 
-<details><summary>expand</summary>
+<details><summary>Expand here to see the solution</summary>
 <p>
 
 ```bash
@@ -357,3 +391,8 @@ k exec -it alpine-2-containers-share-volume -c alpine2 -- cat /tmp/share2/sharef
 
 </p>
 </details>
+
+## 3-Tier App (MVC)
+
+Please read the README file in the subfolder 3-tier-app.
+
