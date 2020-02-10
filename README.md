@@ -394,5 +394,5 @@ k exec -it alpine-2-containers-share-volume -c alpine2 -- cat /tmp/share2/sharef
 
 ## 3-Tier App (MVC)
 
-Please read the README file in the subfolder 3-tier-app.
+Please read the README and the related blog post in the  [subfolder](3-tier-app/README.md)  3-tier-app and try to understand and get the todo list app running.
 
