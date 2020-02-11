@@ -327,6 +327,41 @@ curl <HOSTS value from ingress>
 </p>
 </details>
 
+## DNS based Service discovery with whereami kubia pod
+
+### What We’ll Do
+
+We'll use a slightly extended node.js app (which is a simple web server) from the Kubernetes in Action book by Marko Lukša in 2 different namespaces ns1 and ns2 to demonstrate the DNS based services discovery. 
+
+A service provides a Virtual IP (VIP) address, which means the Service IP is not bound to a physical network interface. A service acts like an internal loadbalancer in K8s! The magic of of routing trafic through the VIP is implemented by IPtable rules managed by kube-proxy!
+
+A service can be called through its FQDN in the form of:
+
+`$SERVICE_NAME.$NAMESPACE.svc.cluster.local`
+
+<details><summary>Expand here to see the solution</summary>
+<p>
+cd whereami
+k create ns ns1
+k create ns ns2
+kn ns1
+k create -f  
+k create -f kubia-deployment.yaml
+k create -f kubia-deployment.yaml -n ns2
+k expose deployment kubia
+k get svc
+k expose deployment kubia -n ns2
+k get svc -n ns2
+k exec -it kubia-<press tab> -- curl kubia.ns2.svc.cluster.local:8080
+k scale deployment kubia -n ns2 --replicas 3
+# repeat the service call many times and see how loadbalancing works
+k exec -it kubia-<press tab> -- curl kubia.ns2.svc.cluster.local:8080
+k exec -n ns2 -it kubia-<press tab> -- curl kubia.ns1.svc.cluster.local:8080
+k exec -it kubia-<press tab> -- ping kubia.ns2.svc.cluster.local
+--> PING kubia.ns2.svc.cluster.local (10.43.109.89) 56(84) bytes of data.
+# you don't get any pong, why?
+</p>
+</details>
 
 ## Multi-Container Pods
 
@@ -402,7 +437,7 @@ k exec -it alpine-2-containers-share-volume -c alpine2 -- cat /tmp/share2/sharef
 
 ## Security
 
-Kubernetes Security is a huge topic and it's hardening is a nice problem which everyone has to implement according to their security requirements and governance model of their organization. We're going only to scratch the surface of K8s security here and highly recommend to go through the following resources by Michael Hausenblas, Liz Rice and the community.
+Kubernetes Security is a huge topic and security hardening is a nice problem which everyone has to implement according to their security requirements and governance model of their organization. We're going only to scratch the surface of K8s security here and highly recommend to go through the following resources by Michael Hausenblas, Liz Rice and the community.
 
 https://kubernetes-security.info/
 
@@ -427,6 +462,9 @@ Similar to Role, ClusterRole can grant permissions on the Cluster Level such as 
 
 RoleBinding and ClusterRoleBinding are used to grant permissions and priviledges to Subjects or Entities on the namespace (project RoleBinding) level or on the cluster level (ClusterRoleBinding).
 
+<details><summary>Expand here to see the solution</summary>
+<p>
+
 ```yaml
 k get clusterroles | wc -l
 k get clusterroles
@@ -444,10 +482,12 @@ k -n secapp auth can-i --as=system:serviceaccount:secapp:myappid list pods
 k -n secapp auth can-i --as=system:serviceaccount:secapp:myappid list services
 # no :-)
 ```
+</p>
+</details>
 
 #### Permission Manager
 
-
+--> ToDo
 
 ## 3-Tier App (MVC)
 
