@@ -22,11 +22,11 @@ https://goo.gl/Hzk2sd
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
-alias k="kubectl"
+```yaml
+alias k="k"
 alias kx="kubectx"
 alias kn="kubens"
-alias kgel="kubectl get events --sort-by=.metadata.creationTimestamp"
+alias kgel="k get events --sort-by=.metadata.creationTimestamp"
 ```
 
 </p>
@@ -72,12 +72,12 @@ k get apiservice
 </p>
 </details>
 
-### kubectl create namespace imperative via declarative
+### k create namespace imperative via declarative
 
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
+```yaml
 k create ns <namespace name, e.g. your name or your project!>
 k create ns --dry-run test -o yaml > test-ns.yaml
 k create -f test-ns.yaml
@@ -87,12 +87,12 @@ k delete ns test
 </p>
 </details>
 
-### kubectl create / run pods or deploymens with dry-run
+### k create / run pods or deploymens with dry-run
 
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
+```yaml
 k run --generator=run-pod/v1 <pod name> --image=<image name> --dry-run -o yaml > <podname.yaml>
 
 k run --generator=run-pod/v1 "nginx-pod" --image=nginx -o yaml --dry-run > nginx-pod.yaml
@@ -144,12 +144,12 @@ k apply -f nginx-deployment.yaml
 </p>
 </details>
 
-### kubectl get events and logs, describe objects
+### k get events and logs, describe objects
 
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
+```yaml
 kx
 kn
 k delete all --all # with caution!!!
@@ -179,7 +179,7 @@ In order to create a secret from a text file, you can run the following, This cr
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
+```yaml
 echo -n "yourvalue" > ./secret.txt
 k create secret generic secretname --from-file=./secret.txt
 k describe secrets secretname
@@ -194,6 +194,10 @@ k create secret generic mysecret --dry-run -o yaml --from-literal=secret.txt=you
 </p>
 </details>
 
+Since K8s secrest are not so secret, there are some ways to keep you secrets secret:
+
+https://learnk8s.io/kubernetes-secrets-in-git
+
 ### Kubernetes ConfigMaps
 
 A ConfigMap is an object consisting of key-value pairs which can be injected into your application.
@@ -206,12 +210,12 @@ Exercise:
 
 Create a ConfigMap named kubernauts that contains a key named dev with the value ops.
 
-With the --from-literal argument passed to the kubectl create configmap command you can create a ConfigMap containing a text value.
+With the --from-literal argument passed to the k create configmap command you can create a ConfigMap containing a text value.
 
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
+```yaml
 k create cm kubernauts --from-literal=dev=ops --dry-run -o yaml > cm-kubernauts.yaml
 cat cm-kubernauts.yaml
 echo -n "ops" > dev
@@ -230,7 +234,7 @@ Using this ConfigMap, we can inject data in our application:
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
+```yaml
 cat 0-nginx-configmap.yaml
 k create -f 0-nginx-configmap.yaml
 ```
@@ -250,7 +254,7 @@ If you'd like to build the container image with docker, do:
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
+```yaml
 git clone https://github.com/containous/whoami.git
 docker build -t whoami .
 docker tag whoami kubernautslabs/whoami
@@ -288,7 +292,7 @@ The Pods will host a container using the image containous/whoami (image:containo
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
+```yaml
 k apply -f 1-whoami-deployment.yaml
 k get all
 # we expose the deployment with a service of type ClusterIP
@@ -329,7 +333,7 @@ The easiest way to do it is create a pod with a single container and save its de
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
+```yaml
 k run alpine-2-containers --image=alpine --restart=Never -o yaml --dry-run -- /bin/sh -c 'echo hello;sleep 3600' > alpine-pod.yaml
 ```
 
@@ -353,7 +357,7 @@ containers:
     resources: {}
 ```
 
-```bash
+```yaml
 k create -f alpine-pod-2-containers.yaml # alpine-pod-2-containers.yaml is in this repo
 # exec / ssh into to the alpine2 container
 k exec -it alpine-2-containers -c alpine2 -- sh
@@ -378,7 +382,7 @@ We'll extend the above alpine-2-containers with a shared volume of type emptyDir
 <details><summary>Expand here to see the solution</summary>
 <p>
 
-```bash
+```yaml
 cat alpine-pod-share-volumes.yaml
 k apply -f alpine-pod-share-volumes.yaml
 k exec -it alpine-2-containers-share-volume -c alpine1 -- sh
@@ -391,6 +395,55 @@ k exec -it alpine-2-containers-share-volume -c alpine2 -- cat /tmp/share2/sharef
 
 </p>
 </details>
+
+## Security
+
+Kubernetes Security is a huge topic and it's hardening is a nice problem which everyone has to implement according to their security requirements and governance model of their organization. We're going only to scratch the surface of K8s security here and highly recommend to go through the following resources by Michael Hausenblas, Liz Rice and the community.
+
+https://kubernetes-security.info/
+
+https://github.com/k8s-sec/k8s-sec.github.io
+
+
+### RBAC (Role Based Access Control)
+
+RBAC in K8s is activated by default and helps to provide access to resources (objects) like namespaces, pods, services, etc. to those Subjects like users, group or service accounts who need access to some resources and deny access to other resources who do not need access to them. RBAC increases security in K8s projects and shall be defined through a governance model in each organization (but in the theorie, you know we are all admins ;-)).
+
+RBAC is implemented through Role, ClusterRole, RoleBinding, and ClusterRoleBinding.
+
+#### Role
+
+A Role defines what you or a subject can do to a set of resources, like get, set, delete, etc.A Role contains a set of rules which define a set of permissions. Roles are used to assigning permissions to resources on the namespace level.
+
+#### ClusterRole
+
+Similar to Role, ClusterRole can grant permissions on the Cluster Level such as giving resource permissions across all namespaces in the cluster.
+
+#### RoleBinding and ClusterRoleBinding
+
+RoleBinding and ClusterRoleBinding are used to grant permissions and priviledges to Subjects or Entities on the namespace (project RoleBinding) level or on the cluster level (ClusterRoleBinding).
+
+```yaml
+k get clusterroles | wc -l
+k get clusterroles
+k describe clusterrole view
+k describe clusterrole view | grep pods
+# the view role allows your application access to many other resources such as deployments and services.
+k create namespace secapp
+k -n secapp create role podreader --verb=get --verb=list --resource=pods
+k -n secapp describe role/podreader
+# nice, the role podview can only view now, but we need to attach the role podview to our application, represented by the service account myappid. 
+k -n secapp create rolebinding mypodviewer --role=podreader --serviceaccount=secapp:myappid
+k -n secapp describe rolebindings mypodviewer
+k -n secapp auth can-i --as=system:serviceaccount:secapp:myappid list pods
+# yes :-)
+k -n secapp auth can-i --as=system:serviceaccount:secapp:myappid list services
+# no :-)
+```
+
+#### Permission Manager
+
+
 
 ## 3-Tier App (MVC)
 
