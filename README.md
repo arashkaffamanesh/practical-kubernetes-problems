@@ -95,6 +95,10 @@ k delete ns test
 ```yaml
 k run --generator=run-pod/v1 <pod name> --image=<image name> --dry-run -o yaml > <podname.yaml>
 
+or
+
+k run --restart=Never <pod name> --image=<image name> --dry-run -o yaml > <podname.yaml>
+
 k run --generator=run-pod/v1 "nginx-pod" --image=nginx -o yaml --dry-run > nginx-pod.yaml
 
 k create <object> <name> <options> --dry-run -o yaml > <objectname.yaml>
@@ -170,9 +174,9 @@ k describe replicasets nginx-<press tab>
 
 ### Kubernetes Secrets are not secret
 
-Secrets are resources containing keys with base64 encoded values.
+Secrets are resources containing keys with base64 encoded values. Secrets are not encrypted by default, they are only encoded and can get decoded easily by everyone who has access to a namespace or to the whole cluster.
 
-These values can be exposed to pods as environment variables or mounted as files.
+Secret values can be exposed to pods as environment variables or mounted as files.
 
 In order to create a secret from a text file, you can run the following, This creates a generic secret named secretname and automatically encodes the value as base64:
 
