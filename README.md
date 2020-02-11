@@ -23,7 +23,7 @@ https://goo.gl/Hzk2sd
 <p>
 
 ```yaml
-alias k="k"
+alias k="kubectl"
 alias kx="kubectx"
 alias kn="kubens"
 alias kgel="k get events --sort-by=.metadata.creationTimestamp"
