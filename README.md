@@ -174,10 +174,10 @@ k describe replicasets nginx-<press tab>
 
 ### Merging contexts (e.g. merge 2 kubeconfigs from 2 cluster contexts)
 
+Sometimes you'll need to merge multiple kubeconfigs into a single file, here you go:
+
 <details><summary>Expand here to see the solution</summary>
 <p>
-
-Sometimes you'll need to merge multiple kubeconfigs into a single file, here you go:
 
 ```bash
 KUBECONFIG=file1:file2:file3 kubectl config view --merge --flatten > my_new_kubeconfig
