@@ -172,6 +172,30 @@ k describe replicasets nginx-<press tab>
 </p>
 </details>
 
+### Merging contexts (e.g. merge 2 kubeconfigs from 2 cluster contexts)
+
+<details><summary>Expand here to see the solution</summary>
+<p>
+
+Sometimes you'll need to merge multiple kubeconfigs into a single file, here you go:
+
+```bash
+KUBECONFIG=file1:file2:file3 kubectl config view --merge --flatten > my_new_kubeconfig
+or
+cp ~/.kube/config ~/.kube/config.bak
+KUBECONFIG=/my/new/kubeconfig:~/.kube/config.bak kubectl config view --flatten > my_new_kubeconfig
+# test it
+export KUBECONFIG=my_new_kubeconfig
+kx
+cp my_new_kubeconfig ~/.kube/config
+```
+</p>
+</details>
+
+Don't miss: Mastering the KUBECONFIG file by Ahmet Alp Balkan:
+
+https://ahmet.im/blog/mastering-kubeconfig/
+
 ### Kubernetes Secrets are not secret
 
 Secrets are resources containing keys with base64 encoded values. Secrets are not encrypted by default, they are only encoded and can get decoded easily by everyone who has access to a namespace or to the whole cluster.
