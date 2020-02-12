@@ -341,6 +341,8 @@ A service can be called through its FQDN in the form of:
 
 <details><summary>Expand here to see the solution</summary>
 <p>
+
+```yaml
 cd whereami
 k create ns ns1
 k create ns ns2
@@ -360,6 +362,7 @@ k exec -n ns2 -it kubia-<press tab> -- curl kubia.ns1.svc.cluster.local:8080
 k exec -it kubia-<press tab> -- ping kubia.ns2.svc.cluster.local
 --> PING kubia.ns2.svc.cluster.local (10.43.109.89) 56(84) bytes of data.
 # you don't get any pong, why?
+```
 </p>
 </details>
 
