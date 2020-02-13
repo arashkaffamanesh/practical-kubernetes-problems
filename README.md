@@ -119,6 +119,12 @@ k get svc
 
 k port-forward service/nginx-pod 8080:80
 
+or
+
+k proxy
+
+open http://127.0.0.1:8001/api/v1/namespaces/default/pods/nginx-pod/proxy/
+
 # open a new terminal session
 
 curl http://127.0.0.1:8080/
@@ -386,6 +392,8 @@ k exec -n ns2 -it kubia-<press tab> -- curl kubia.ns1.svc.cluster.local:8080
 k exec -it kubia-<press tab> -- ping kubia.ns2.svc.cluster.local
 --> PING kubia.ns2.svc.cluster.local (10.43.109.89) 56(84) bytes of data.
 # you don't get any pong, why?
+# ssh into a node and examine the IPtable rules
+sudo iptables-save | grep kubia
 ```
 </p>
 </details>
@@ -464,16 +472,74 @@ k exec -it alpine-2-containers-share-volume -c alpine2 -- cat /tmp/share2/sharef
 
 ## Security
 
-Kubernetes Security is a huge topic and security hardening is a nice problem which everyone has to implement according to their security requirements and governance model of their organization. We're going only to scratch the surface of K8s security here and highly recommend to go through the following resources by Michael Hausenblas, Liz Rice and the community.
+Kubernetes Security is a huge topic and security hardening is a nice problem which everyone has to implement according to their security requirements and the governance model of their organization. We're going only to scratch the surface of K8s security here and highly recommend to go through the following resources by Michael Hausenblas, Liz Rice and the community.
 
 https://kubernetes-security.info/
+
+https://learn.hashicorp.com/vault/getting-started-k8s/sidecar
 
 https://github.com/k8s-sec/k8s-sec.github.io
 
 
+### Service Accounts
+
+In K8s each namespace has a default ServiceAccount, named `default`. A ServiceAccount is a namespaced resource used by containers running in a Pod, to communicate with the API server of the Kubernetes cluster. ServiceAccounts with limited permissions are often used to apply the principle of least priviledge.
+
+```bash
+k get sa --all-namespaces | grep default
+k get sa default -o yaml
+k get secret default-<press tab> -o yaml
+```
+
+The data key of this Secret has several key/pairs:
+
+```yaml
+apiVersion: v1
+kind: Secret
+data:
+  ca.crt: LS0tLS1CRUdJTi...
+  namespace: ZGVmYXVsdA==
+  token: ZXlKaGJHY2lP...
+metadata:
+  annotations:
+    kubernetes.io/service-account.name: default
+...
+```
+
+The token is the Base64 encoding of the JWT used to authenticate against the API server.
+Let's get the token and head to jwt.io and use the debugger to decode the token.
+
+```bash
+kubectl run -it alpine --restart=Never --image=alpine -- sh
+ls /var/run/secrets/kubernetes.io/serviceaccount/
+cat /var/run/secrets/kubernetes.io/serviceaccount/token
+exit
+open https://jwt.io/
+```
+
+Paste the token and get the payload, which looks similar to this:
+
+```
+{
+  "iss": "kubernetes/serviceaccount",
+  "kubernetes.io/serviceaccount/namespace": "default",
+  "kubernetes.io/serviceaccount/secret.name": "default-token-24pbl",
+  "kubernetes.io/serviceaccount/service-account.name": "default",
+  "kubernetes.io/serviceaccount/service-account.uid": "147e134a-43d0-4c76-ad01-bccc59f8acb9",
+  "sub": "system:serviceaccount:default:default"
+}
+```
+
+We can see the service account default is linked to the namespace where it exists and is using the secret default-token-24pbl.
+
+### Using a Custom ServiceAccount
+
+A Service Account on its own is on not so useful, we need to provide rome rights and permissions to it through a set of rules defined through roles or cluster roles using the RBAC implementation in K8s.  
+
+
 ### RBAC (Role Based Access Control)
 
-RBAC in K8s is activated by default and helps to provide access to resources (objects) like namespaces, pods, services, etc. to those Subjects like users, group or service accounts who need access to some resources and deny access to other resources who do not need access to them. RBAC increases security in K8s projects and shall be defined through a governance model in each organization (but in the theorie, you know we are all admins ;-)).
+RBAC in K8s is activated by default and helps to provide access to resources (objects) like namespaces, pods, services, etc. to those Subjects or Entities like users, group or service accounts who need access to some resources and deny access to other resources who do not need access to them. RBAC increases security in K8s projects and shall be defined through a governance model in each organization (but in the theorie, you know we are all admins ;-)).
 
 RBAC is implemented through Role, ClusterRole, RoleBinding, and ClusterRoleBinding.
 
@@ -489,25 +555,55 @@ Similar to Role, ClusterRole can grant permissions on the Cluster Level such as 
 
 RoleBinding and ClusterRoleBinding are used to grant permissions and priviledges to Subjects or Entities on the namespace (project RoleBinding) level or on the cluster level (ClusterRoleBinding).
 
+#### What We’ll Do
+
+We create a new namespace myapp and a new custom ServiceAccount `mysa`, create a new role `podreader` with the permission to get and list pods and create a rolebinding `mypodviewer` to bind the ServiceAccount to the role podreader in the namespace `myapp`.
+
 <details><summary>Expand here to see the solution</summary>
 <p>
 
 ```yaml
 k get clusterroles | wc -l
+# 62
 k get clusterroles
 k describe clusterrole view
 k describe clusterrole view | grep pods
 # the view role allows your application access to many other resources such as deployments and services.
-k create namespace secapp
-k -n secapp create role podreader --verb=get --verb=list --resource=pods
-k -n secapp describe role/podreader
-# nice, the role podview can only view now, but we need to attach the role podview to our application, represented by the service account myappid. 
-k -n secapp create rolebinding mypodviewer --role=podreader --serviceaccount=secapp:myappid
-k -n secapp describe rolebindings mypodviewer
-k -n secapp auth can-i --as=system:serviceaccount:secapp:myappid list pods
+k create namespace myapp
+k -n=myapp create serviceaccount mysa
+k -n myapp create role podreader --verb=get --verb=list --resource=pods
+k -n myapp describe role/podreader
+# nice, the role podreader can only view now, but we need to attach the role podreader to our application, represented by the service account myapp. 
+k -n myapp create rolebinding mypodviewer --role=podreader --serviceaccount=myapp:mysa
+k -n myapp describe rolebindings mypodviewer
+k -n myapp auth can-i --as=system:serviceaccount:myapp:mysa list pods
 # yes :-)
-k -n secapp auth can-i --as=system:serviceaccount:secapp:myappid list services
+k -n myapp auth can-i --as=system:serviceaccount:myapp:mysa list services
 # no :-)
+```
+</p>
+</details>
+
+We extend our alpine pod with the key `serviceAccountName` and the value `mysa`, apply the change and run a shell in the alpine-pod, get the toke belonging to the `mysa` ServiceAccountand use it to list the pods in the default namespace and the myapp namespace to see the differences:
+
+<details><summary>Expand here to see the solution</summary>
+<p>
+
+```yaml
+
+kn myapp
+cat alpine-pod-service-account.yaml
+k apply -f alpine-pod-service-account.yaml
+k describe pod alpine-sa
+k get sa
+k get secrets
+k exec -it alpine-sa -- sh
+apk add curl
+TOKEN=$(cat /run/secrets/kubernetes.io/serviceaccount/token)
+curl -H "Authorization: Bearer $TOKEN" https://node1:6443/api/v1/namespaces/default/pods/ --insecure
+curl -H "Authorization: Bearer $TOKEN" https://node1:6443/api/v1/namespaces/myapp/pods/ --insecure
+# what works, what doesn't work?
+
 ```
 </p>
 </details>
