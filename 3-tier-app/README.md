@@ -4,7 +4,7 @@ Please read this great post about the todo list demo app, it was tested on k3s 1
 
 https://medium.com/better-programming/kubernetes-a-detailed-example-of-deployment-of-a-stateful-application-de3de33c8632
 
-You should understand how the secrets, configmaps and deployment manifests was built and what the do!
+You should understand how the secrets, configmaps and deployment manifests was built and what they do!
 
 <details><summary>Expand here to see the solution</summary>
 <p>
