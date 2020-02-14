@@ -635,6 +635,8 @@ Day 2 operation is mainly about implementing some principles like selfhealing an
 
 In this first section we'll go only through app auto scaling with Horizontal Pod Autoscaler.
 
+![hpa](images/pod-autoscaling-hpa.png "hap")
+
 ### Pod AutoScaling with HPA (Horizontal Pod Autoscaler)
 
 ```bash
