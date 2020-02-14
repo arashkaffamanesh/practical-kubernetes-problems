@@ -16,11 +16,13 @@ We can use any Kubernetes cluster (> 1.4) on our local machine or in the cloud. 
 
 [K3S with MetalLB on Multipass VMs](https://blog.kubernauts.io/k3s-with-metallb-on-multipass-vms-ac2b37298589)
 
-We'll use some slides from 
-
-[Kubernauts Kubernetes Learning Resources List](https://goo.gl/Rywkpd)
+We'll use some slides from:
 
 [Kubernauts Kubernetes Trainings Slides](https://goo.gl/Hzk2sd)
+
+and refer to some resources from:
+
+[Kubernauts Kubernetes Learning Resources List](https://goo.gl/Rywkpd)
 
 ### Useful aliases
 
