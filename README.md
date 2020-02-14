@@ -4,7 +4,7 @@ This repo provides some resources to learn Kubernetes through practical exercise
 
 ## Prerequsites
 
-It would be nice if you know what `kubectl` is and have a basic understanding of running conatierns with docker / containerd or cri-o.
+It would be nice if you know what `kubectl` is and have a basic understanding of running conatiners with docker / containerd or cri-o.
 
 ## Preparation
 
