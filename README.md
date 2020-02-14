@@ -1,21 +1,26 @@
 # Practical Kubernetes Problems
 
+This repo provides some resources to learn Kubernetes through practical exercises for Kubernauts trainings or for self study.
+
+## Prerequsites
+
+It would be nice if you know what `kubectl` is and have a basic understanding of running conatierns with docker / containerd or cri-o.
+
 ## Preparation
 
-### The Golden Kubernetes Tooling and Helpers list
+To get prepared please install at least kubectx and kns with krew from this list and make sure to have bash completion for kubectl in place:
 
-http://bit.ly/kubernetes-tooling-list
+[The Golden Kubernetes Tooling and Helpers list](http://bit.ly/kubernetes-tooling-list)
 
-Note: Install at least kubectx and kns with krew
+We can use any Kubernetes cluster (> 1.4) on our local machine or in the cloud. For online trainings we recommend to have either k3s installed with k3d, use Kind, Docker for Desktop or a near to production k3s or rke cluster on your local machine with MetalLB for load balancing (nice to have). We recommend to have k3s running in multipass VMs on your machine.
 
-### Kubernauts Kubernetes Learning Resources List
+[K3S with MetalLB on Multipass VMs](https://blog.kubernauts.io/k3s-with-metallb-on-multipass-vms-ac2b37298589)
 
-https://goo.gl/Rywkpd
+We'll use some slides from 
 
-### Kubernauts Kubernetes Trainings Slides
+[Kubernauts Kubernetes Learning Resources List](https://goo.gl/Rywkpd)
 
-https://goo.gl/Hzk2sd
-
+[Kubernauts Kubernetes Trainings Slides](https://goo.gl/Hzk2sd)
 
 ### Useful aliases
 
@@ -26,9 +31,9 @@ https://goo.gl/Hzk2sd
 alias k="kubectl"
 alias kx="kubectx"
 alias kn="kubens"
+alias kgp="kubectl get pods"
 alias kgel="k get events --sort-by=.metadata.creationTimestamp"
 ```
-
 </p>
 </details>
 
@@ -530,7 +535,7 @@ Paste the token and get the payload, which looks similar to this:
 }
 ```
 
-We can see the service account default is linked to the namespace where it exists and is using the secret default-token-24pbl.
+We can see the service account default is linked to the namespace where it exists and is using the secret default-token-24pbl. This token is available in the filesystem of each container of the Pod of the attached ServiceAccount.
 
 ### Using a Custom ServiceAccount
 
@@ -554,6 +559,8 @@ Similar to Role, ClusterRole can grant permissions on the Cluster Level such as 
 #### RoleBinding and ClusterRoleBinding
 
 RoleBinding and ClusterRoleBinding are used to grant permissions and priviledges to Subjects or Entities on the namespace (project RoleBinding) level or on the cluster level (ClusterRoleBinding).
+
+![RBAC](images/rbac.png "rbac")
 
 #### What We’ll Do
 
@@ -608,11 +615,37 @@ curl -H "Authorization: Bearer $TOKEN" https://node1:6443/api/v1/namespaces/myap
 </p>
 </details>
 
+#### Further reading:
+
+[Kubernetes Tips: Using a ServiceAccount](https://medium.com/better-programming/k8s-tips-using-a-serviceaccount-801c433d0023)
+
 #### Permission Manager
 
 --> ToDo
 
 ## 3-Tier App (MVC)
 
-Please read the README and the related blog post in the  [subfolder](3-tier-app/README.md)  3-tier-app and try to understand and get the todo list app running.
+Please read the README and the related blog post in the [subfolder](3-tier-app/README.md)  3-tier-app and try to understand and get the todo list app up and running.
+
+# Day 2 Operation
+
+Day 2 operation is mainly about implementing some principles like selfhealing and autoscaling for our apps AND the infrastructure components like nodes and K8s components itself and define resources limits, liveness and readiness probes for our apps, run continious security auditing, etc.
+
+In this first section we'll go only through app auto scaling with Horizontal Pod Autoscaler.
+
+### Pod AutoScaling with HPA (Horizontal Pod Autoscaler)
+
+```bash
+kubectl run hpa-example --image=k8s.gcr.io/hpa-example --requests=cpu=200m --expose --port=80
+# create HPA based on CPU usage
+kubectl autoscale deployment hpa-example --cpu-percent=50 --min=1 --max=10
+# In another terminal run
+kubectl run -i --tty generate-load --image=busybox /bin/sh
+# Inside the above container run a loop bash command ito stress the CPU
+while true; do wget -q -O- http://hpa-example.default.svc.cluster.local; done
+# Check HPA Status
+kubectl get hpa
+```
+
+
 
