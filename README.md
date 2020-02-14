@@ -641,7 +641,7 @@ kubectl run hpa-example --image=k8s.gcr.io/hpa-example --requests=cpu=200m --exp
 kubectl autoscale deployment hpa-example --cpu-percent=50 --min=1 --max=10
 # In another terminal run
 kubectl run -i --tty generate-load --image=busybox /bin/sh
-# Inside the above container run a loop bash command ito stress the CPU
+# Inside the above container run a loop bash command to stress the CPU
 while true; do wget -q -O- http://hpa-example.default.svc.cluster.local; done
 # Check HPA Status
 kubectl get hpa
