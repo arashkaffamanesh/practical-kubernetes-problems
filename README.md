@@ -423,7 +423,7 @@ But in some cases where stickiness is needed and the clients need to connect to 
 
 To do that we need to define our service as a `headless` service, let's see that in action with the whereami service and our utils pod.
 
-In the following we expose the kubia deployment as a headless service by setting the ClusterIP to `None`, scale the deployment and do a DNS query to both services with `host kubia-headless` and `host kubia-clusterip` from within the util client pod. As you'll see our client pod always connects to the first IP in DNS response, if we curl the headless service, which means no load balancing happens, the call is `Sticky`!
+In the following we expose the kubia deployment as a headless service by setting the ClusterIP to `None`, scale the deployment and do a DNS query to both services with `host kubia-headless` and `host kubia-clusterip` from within the util client pod. As you'll see our client pod always connects to the first IP from the DNS response, if we curl the headless service. This means no load balancing happens, the call is `Sticky`!
 
 The second curl to the service with ClusterIP does load balancing and distributes the traffic between pods.
 
