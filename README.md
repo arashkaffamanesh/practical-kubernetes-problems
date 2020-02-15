@@ -18,7 +18,7 @@ To get prepared please install at least kubectx and kns with krew from this list
 
 [The Golden Kubernetes Tooling and Helpers list](http://bit.ly/kubernetes-tooling-list)
 
-We can use any Kubernetes cluster (> 1.4) on our local machine or in the cloud. For online trainings we recommend to have either k3s installed with k3d, use Kind, Docker for Desktop or a near to production k3s or rke cluster on your local machine with MetalLB for load balancing (nice to have). We recommend to have k3s running in multipass VMs on your machine.
+We can use any Kubernetes cluster (> 1.14) on our local machine or in the cloud. For online trainings we recommend to have either k3s installed with k3d, use Kind, Docker for Desktop or a near to production k3s or rke cluster on your local machine with MetalLB for load balancing (nice to have). We recommend to have k3s running in multipass VMs on your machine.
 
 [K3S with MetalLB on Multipass VMs](https://blog.kubernauts.io/k3s-with-metallb-on-multipass-vms-ac2b37298589)
 
@@ -241,7 +241,7 @@ k create secret generic mysecret --dry-run -o yaml --from-literal=secret.txt=you
 </p>
 </details>
 
-Since K8s secrest are not so secret, there are some ways to keep you secrets secret:
+Since K8s secrets are not so secret, there are some ways to keep you secrets secret:
 
 https://learnk8s.io/kubernetes-secrets-in-git
 
@@ -410,6 +410,45 @@ sudo iptables-save | grep kubia
 ```
 </p>
 </details>
+
+### Headless Services for Stickiness
+
+![hadless](images/headless-cluster-ip.png "headless-cluster-ip")
+
+As we learned services are exposed by default through the ClusterIP, they work as an internal layer 4 load-balancer and provide a VIP with a stable DNS address, where the clients can connect to. The service forwards the connections to one of the pods which are backing the service via round robin.
+
+This works fine and is desired for stateless apps which need to connect to one of the pods randomly and gain more performance through trafic routing via load balancing.
+
+But in some cases where stickiness is needed and the clients need to connect to a particular pod for session or data stickiness, then we need to define our service without ClusterIP, which is by default the head of the service (that's the VIP).
+
+To do that we need to define our service as a `headless` service, let's see that in action with the whereami service and our utils pod.
+
+In the following we expose the kubia deployment as a headless service by setting the ClusterIP to `None`, scale the deployment and do a DNS query to both services with `host kubia-headless` and `host kubia-clusterip` from within the util client pod. As you'll see our client pod always connects to the first IP in DNS response, if we curl the headless service, which means no load balancing happens, the call is `Sticky`!
+
+The second curl to the service with ClusterIP does load balancing and distributes the traffic between pods.
+
+<details><summary>Expand here to see the solution</summary>
+<p>
+
+```yaml
+k delete svc kubia
+k expose deployment kubia --name kubia-headless --cluster-ip None
+k expose deployment kubia --name kubia-clusterip
+k scale deployment kubia --replicas 3
+k run --generator=run-pod/v1 utils -it --image kubernautslabs/utils -- bash
+# inside the utils container
+host kubia-headless
+host kubia-clusterip
+# what is the difference here?
+for i in $(seq 1 10) ; do curl kubia-headless:8080; done
+# hits kubia only on one node? 
+for i in $(seq 1 10) ; do curl kubia-clusterip:8080; done
+# does load balancing via the head ;-)
+```
+
+</p>
+</details>
+
 
 ## Multi-Container Pods
 
