@@ -1,0 +1,30 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ghost
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/frontend-entry-points: http,https
+    traefik.ingress.kubernetes.io/redirect-entry-point: https
+    traefik.ingress.kubernetes.io/redirect-permanent: "true"
+spec:
+  tls:
+  - hosts:
+    - my.ghost.svc
+    secretName: ghost-secret
+  rules:
+  - host: my.ghost.svc
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: ghost
+          servicePort: 2368
+  - host: admin.ghost.svc
+    http:
+      paths:
+      - path: /ghost
+        backend:
+          serviceName: ghost
+          servicePort: 2368

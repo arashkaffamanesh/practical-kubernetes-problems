@@ -18,7 +18,7 @@ To get prepared please install at least kubectx and kns with krew from this list
 
 [The Golden Kubernetes Tooling and Helpers list](http://bit.ly/kubernetes-tooling-list)
 
-We can use any Kubernetes cluster (> 1.14) on our local machine or in the cloud. For online trainings we recommend to have either k3s installed with k3d, use Kind, Docker for Desktop or a near to production k3s or rke cluster on your local machine with MetalLB for load balancing (nice to have). We recommend to have k3s running in multipass VMs on your machine.
+We can use any Kubernetes cluster (> 1.14) on our local machine or in the cloud. For online trainings we recommend to have either k3s installed with k3d, use Kind, Docker for Desktop or a near-to-production k3s or rke cluster on your local machine with MetalLB for load balancing (nice to have). We recommend to have k3s running in multipass VMs on your machine.
 
 [K3S with MetalLB on Multipass VMs](https://blog.kubernauts.io/k3s-with-metallb-on-multipass-vms-ac2b37298589)
 
@@ -390,7 +390,7 @@ cd whereami
 k create ns ns1
 k create ns ns2
 kn ns1
-k create -f  
+cat kubia-deployment.yaml   
 k create -f kubia-deployment.yaml
 k create -f kubia-deployment.yaml -n ns2
 k expose deployment kubia
@@ -415,7 +415,7 @@ sudo iptables-save | grep kubia
 
 ![hadless](images/headless-cluster-ip.png "headless-cluster-ip")
 
-As we learned services are exposed by default through the ClusterIP, they work as an internal layer 4 load-balancer and provide a VIP with a stable DNS address, where the clients can connect to. The service forwards the connections to one of the pods which are backing the service via round robin.
+As we learned services are exposed by default through the type ClusterIP, they work as an internal layer 4 load-balancer and provide a VIP with a stable DNS address, where the clients can connect to. The service forwards the connections to one of the pods which are backing the service via round robin.
 
 This works fine and is desired for stateless apps which need to connect to one of the pods randomly and gain more performance through trafic routing via load balancing.
 
@@ -434,6 +434,7 @@ The second curl to the service with ClusterIP does load balancing and distribute
 k delete svc kubia
 k expose deployment kubia --name kubia-headless --cluster-ip None
 k expose deployment kubia --name kubia-clusterip
+k expose deployment kubia --name kubia-lb --type=LoadBalancer
 k scale deployment kubia --replicas 3
 k run --generator=run-pod/v1 utils -it --image kubernautslabs/utils -- bash
 # inside the utils container
@@ -444,17 +445,65 @@ for i in $(seq 1 10) ; do curl kubia-headless:8080; done
 # hits kubia only on one node? 
 for i in $(seq 1 10) ; do curl kubia-clusterip:8080; done
 # does load balancing via the head ;-)
+mkcert '*.whereami.svc'
+k create secret tls whereami-secret --cert=_wildcard.whereami.svc.pem --key=_wildcard.whereami.svc-key.pem
+cat whereami/kubia-ingress-tls.yaml
+k create -f whereami/kubia-ingress-tls.yaml
+# Please provide the host entry mapping in your /etc/hosts file like this:
+# 192.168.64.23 my.whereami.svc
+# the IP should be the IP of the traefik loadbalancer / ingress controller
+curl https://my.whereami.svc
+for i in $(seq 1 10) ; do curl https://my.whereami.svc; done
+# the ingress controller does load balancing, although the kubia-headless is defined as the backend with serviceName: kubia-headless!
 ```
 
 </p>
 </details>
 
+## Ingress with TLS
+
+![ingress-controller](images/ingress-controller-traefik.png "ingress-controller-traefik")
+
+Often we need to use an ingress object to provide path based or (sub-) domain based routing with TLS termination and other capabilities defined through annotations in the ingress resource.
+
+By creating an ingress for a service, the ingress controller will create a single entry-point to the defined service in the ingress resource on every node in the cluster.
+
+In the follwoing we're using the traefik ingress controller and an ingress object to provide path based or (sub-) domain based routing with TLS termination with a valid mkcert made TLS certificate on our lab environment.
+
+
+<details><summary>Expand here to see the solution</summary>
+<p>
+
+```yaml
+mkcert '*.ghost.svc'
+k create secret tls ghost-secret --cert=_wildcard.ghost.svc.pem --key=_wildcard.ghost.svc-key.pem
+# alternatively, if you can't or you don't want to use mkcert, you can create a selfsigned cert with:
+# openssl genrsa -out tls.key 2048
+# openssl req -new -x509 -key tls.key -out tls.cert -days 360 -subj /CN=my.ghost.svc
+# k create secret tls ghost-secret --cert=tls.cert --key=tls.key
+cat 3-ghost-deployment.yaml
+k create -f 3-ghost-deployment.yaml
+k expose deployment ghost --port=2368
+cat 3-ghost-ingress-tls.yaml
+k create -f 3-ghost-ingress-tls.yaml
+# Please provide the host entry mapping in your /etc/hosts file like this:
+# 192.168.64.23 my.ghost.svc admin.ghost.svc
+# the IP should be the IP of the traefik loadbalancer / ingress controller
+open https://my.ghost.svc
+open https://admin.ghost.svc/ghost
+# change the service type to LoadBalancer and access ghost with the loadbalancer IP on port 2368 or on any other node, e.g.:
+open http://node2:2368
+# scale the deployment to have 2 replicas and see how the backend ghost backened https://admin.ghost.svc/ghost doesn't work.
+```
+
+</p>
+</details>
 
 ## Multi-Container Pods
 
 Create a Pod with two containers, both with image alpine and command "echo hello; sleep 3600". Connect to the second container and run 'ls'.
 
-The easiest way to do it is create a pod with a single container and save its definition in a YAML file and extend it with an additional container:
+The easiest way to do it is to create a pod with a single container and save its definition in a YAML file and extend it with an additional container:
 
 <details><summary>Expand here to see the solution</summary>
 <p>
