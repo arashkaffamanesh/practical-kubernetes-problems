@@ -18,9 +18,8 @@ To get prepared please install at least kubectx and kns with krew from this list
 
 [The Golden Kubernetes Tooling and Helpers list](http://bit.ly/kubernetes-tooling-list)
 
-We can use any Kubernetes cluster (> 1.14) on our local machine or in the cloud. For online trainings we recommend to have either k3s installed with k3d, use Kind, Docker for Desktop or a near-to-production k3s or rke cluster on your local machine with MetalLB for load balancing (nice to have). We recommend to have k3s running in multipass VMs on your machine.
+We can use any Kubernetes cluster (> 1.14) on our local machine or in the cloud. For online trainings we recommend to have either k3s installed with k3d, use Kind, Docker for Desktop or a near-to-production k3s or rke cluster on your local machine with MetalLB for load balancing (nice to have). We recommend to have [K3S with MetalLB on Multipass VMs](https://blog.kubernauts.io/k3s-with-metallb-on-multipass-vms-ac2b37298589) running on your machine or the [kubeadm-multipass](https://github.com/arashkaffamanesh/kubeadm-multipass) implementation.  
 
-[K3S with MetalLB on Multipass VMs](https://blog.kubernauts.io/k3s-with-metallb-on-multipass-vms-ac2b37298589)
 
 We'll use some slides from:
 
@@ -70,7 +69,7 @@ k get nodes -o jsonpath='{.items[*].spec.podCIDR}'
 
 k get pods -o wide
 
-k get pod my-pod -o yaml --export > my-pod.yaml
+k get pod my-pod -o yaml --export > my-pod.yaml  # Get a pod's YAML without cluster specific information
 
 k get pods --show-labels # Show labels for all pods (or other objects)
 
@@ -79,6 +78,10 @@ k get pods --sort-by='.status.containerStatuses[0].restartCount'
 k cluster-info
 
 k api-resources
+
+k api-resources -o wide
+
+kubectl api-resources --verbs=list,get # All resources that support the "list" and "get" request verbs
 
 k get apiservice
 
@@ -241,9 +244,15 @@ k create secret generic mysecret --dry-run -o yaml --from-literal=secret.txt=you
 </p>
 </details>
 
+#### Further reading:
+
 Since K8s secrets are not so secret, there are some ways to keep you secrets secret:
 
 https://learnk8s.io/kubernetes-secrets-in-git
+
+https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/#create-a-pod-that-has-access-to-the-secret-data-through-environment-variables
+
+
 
 ### Kubernetes ConfigMaps
 
@@ -445,10 +454,11 @@ for i in $(seq 1 10) ; do curl kubia-headless:8080; done
 # hits kubia only on one node? 
 for i in $(seq 1 10) ; do curl kubia-clusterip:8080; done
 # does load balancing via the head ;-)
+exit
 mkcert '*.whereami.svc'
 k create secret tls whereami-secret --cert=_wildcard.whereami.svc.pem --key=_wildcard.whereami.svc-key.pem
-cat whereami/kubia-ingress-tls.yaml
-k create -f whereami/kubia-ingress-tls.yaml
+cat kubia-ingress-tls.yaml
+k create -f kubia-ingress-tls.yaml
 # Please provide the host entry mapping in your /etc/hosts file like this:
 # 192.168.64.23 my.whereami.svc
 # the IP should be the IP of the traefik loadbalancer / ingress controller
@@ -475,6 +485,8 @@ In the follwoing we're using the traefik ingress controller and an ingress objec
 <p>
 
 ```yaml
+cd ..
+kn default
 mkcert '*.ghost.svc'
 k create secret tls ghost-secret --cert=_wildcard.ghost.svc.pem --key=_wildcard.ghost.svc-key.pem
 # alternatively, if you can't or you don't want to use mkcert, you can create a selfsigned cert with:
@@ -491,7 +503,7 @@ k create -f 3-ghost-ingress-tls.yaml
 # the IP should be the IP of the traefik loadbalancer / ingress controller
 open https://my.ghost.svc
 open https://admin.ghost.svc/ghost
-# change the service type to LoadBalancer and access ghost with the loadbalancer IP on port 2368 or on any other node, e.g.:
+# change the service type to LoadBalancer and access ghost with the loadbalancer IP on port 2368 or on any other node (works on k3s with trafik only), e.g.:
 open http://node2:2368
 # scale the deployment to have 2 replicas and see how the backend ghost backened https://admin.ghost.svc/ghost doesn't work.
 ```
@@ -725,9 +737,9 @@ Please read the README and the related blog post in the [subfolder](3-tier-app/R
 
 # Day 2 Operation
 
-Day 2 operation is mainly about implementing some principles like selfhealing and autoscaling for our apps AND the infrastructure components like nodes and K8s components itself and define resources limits, liveness and readiness probes for our apps, run continious security auditing, etc.
+Day 2 operation is mainly about implementing some principles like selfhealing and autoscaling for our apps AND the infrastructure components like nodes and K8s components itself and define resources limits, liveness and readiness probes for our apps, run continious security auditing, apply GitOps principles and style, etc.
 
-In this first section we'll go only through app auto scaling with Horizontal Pod Autoscaler.
+In this first section we'll go through app auto scaling with Horizontal Pod Autoscaler.
 
 ![hpa](images/pod-autoscaling-hpa.png "hap")
 
@@ -744,6 +756,23 @@ while true; do wget -q -O- http://hpa-example.default.svc.cluster.local; done
 # Check HPA Status
 kubectl get hpa
 ```
+
+### Coming next
+
+* Cluster Operation and maintanance
+
+* Nodes AutoScaling and AutoSpotting (on AWS)
+
+* Logging and Monitoring with Operators
+
+* Trouble Shooting
+
+* Cloud Native Storage for Statefulsets
+
+* Backup & Recovery
+
+* GitOps with Argo, Flux or Gitlab
+
 
 
 
