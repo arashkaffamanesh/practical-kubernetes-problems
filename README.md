@@ -16,6 +16,23 @@ It would be nice if you know what `kubectl` is and have a basic understanding of
 
 To get prepared please install at least kubectx and kns with krew from this list and make sure to have bash completion for kubectl in place:
 
+## Tools we use
+
+- [mkcert](https://github.com/FiloSottile/mkcert)
+- watch  
+  - [mac setup]
+    ````
+    brew install watch
+- [oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh)
+  - activate autocompletion
+    - [mac setup](https://docs.brew.sh/Shell-Completion)
+- [git](https://git-scm.com/)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)  
+  - mac setup 
+    ```
+    brew install kubernetes-cli
+- [kubectx & kubens](https://github.com/ahmetb/kubectx)
+
 [The Golden Kubernetes Tooling and Helpers list](http://bit.ly/kubernetes-tooling-list)
 
 We can use any Kubernetes cluster (> 1.14) on our local machine or in the cloud. For online trainings we recommend to have either k3s installed with k3d, use Kind, Docker for Desktop or a near-to-production k3s or rke cluster on your local machine with MetalLB for load balancing (nice to have). We recommend to have [K3S with MetalLB on Multipass VMs](https://blog.kubernauts.io/k3s-with-metallb-on-multipass-vms-ac2b37298589) running on your machine or the [kubeadm-multipass](https://github.com/arashkaffamanesh/kubeadm-multipass) implementation.  
