@@ -26,12 +26,14 @@ To get prepared please install at least kubectx and kns with krew from this list
 - [oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh)
   - activate autocompletion
     - [mac setup](https://docs.brew.sh/Shell-Completion)
+    - [kubectl plugin](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/kubectl)
 - [git](https://git-scm.com/)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)  
   - mac setup 
     ```
     brew install kubernetes-cli
 - [kubectx & kubens](https://github.com/ahmetb/kubectx)
+
 
 [The Golden Kubernetes Tooling and Helpers list](http://bit.ly/kubernetes-tooling-list)
 
